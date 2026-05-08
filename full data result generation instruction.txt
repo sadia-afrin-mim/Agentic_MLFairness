@@ -1,0 +1,238 @@
+1. configuration: in run.py file set
+api_key      = "set your api key here"
+dataset_path      = "bank-full.csv"
+2. generate tests: python run.py
+3. compare results after retraining: python retrain_and_compare.py
+Note: Generating this result requires 4+ hours due model training and discriminatory sample searching on large dataset and API call. The result of this version is included in the final report.
+=======================================================================================================
+                                   Final Result
+=======================================================================================================
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Install the latest PowerShell for new features and improvements! https://aka.ms/PSWindows
+PS C:\Users\safrinmi\Downloads\agentic_fairness> python run.py
+
+[LOAD] Loading dataset: bank-full.csv
+  Loaded as UCI Bank dataset (no header)
+  Shape: (45211, 17)
+
+[OK] Protected attributes set: [ 'marital']
+
+[OK] Using protected attributes: [ 'marital']
+
+[MODEL] Training model (rf)...
+  [OK] Model trained successfully!
+  Accuracy: 0.8920
+  Training samples: 36,168
+  Test samples:     9,043
+
+[OK] LLM: gpt-4o-mini
+
+=================================================================
+  FairAgent: Bank Marketing ML Fairness Testing
+  Dataset:   45,211 customers
+  Target:    y
+  Protected: ['age', 'marital']
+  LLM:       gpt-4o-mini
+=================================================================
+
+─────────────────────────────────────────────────────────────────
+  ITERATION 1/3
+─────────────────────────────────────────────────────────────────
+
+[METRICS] Measuring fairness...
+  marital        : SPD=-0.043 | EOD=-0.004 | DI=1.461 | AOD=-0.003 [LOW [OK]] [WARN] BIASED
+
+[WARN]  Bias detected in: ['age', 'marital']
+
+[SEARCH] Computing feature importance (SHAP)...
+  duration            : 0.0780
+  month               : 0.0268
+  housing             : 0.0258
+  poutcome            : 0.0218
+  pdays               : 0.0201
+
+[GLOBAL] Global Search: generating 30 seed customers...
+  Generated 23 seeds
+
+[LOCAL] Local Search (G=found, F=not found, U=invalid, R=retry)
+  [23/23] G=131 F=4968 U=0 R=962 cost=$0.524
+
+  Iteration 1 summary:
+  G=131 (found) | F=5199 (not found) | U=0 (invalid) | R=1004 (retries) | cost=~$0.547
+
+─────────────────────────────────────────────────────────────────
+  ITERATION 2/3
+─────────────────────────────────────────────────────────────────
+
+[METRICS] Measuring fairness...
+  marital        : SPD=-0.043 | EOD=-0.004 | DI=1.461 | AOD=-0.003 [LOW [OK]] [WARN] BIASED
+
+[WARN]  Bias detected in: ['age', 'marital']
+
+[SEARCH] Computing feature importance (SHAP)...
+  duration            : 0.0780
+  month               : 0.0268
+  housing             : 0.0258
+  poutcome            : 0.0218
+  pdays               : 0.0201
+
+[GLOBAL] Global Search: generating 30 seed customers...
+  Generated 24 seeds
+
+[LOCAL] Local Search (G=found, F=not found, U=invalid, R=retry)
+  [24/24] G=200 F=10500 U=0 R=2002 cost=$1.092
+
+  Iteration 2 summary:
+  G=200 (found) | F=10764 (not found) | U=0 (invalid) | R=2050 (retries) | cost=~$1.118
+
+─────────────────────────────────────────────────────────────────
+  ITERATION 3/3
+─────────────────────────────────────────────────────────────────
+
+[METRICS] Measuring fairness...
+  marital        : SPD=-0.043 | EOD=-0.004 | DI=1.461 | AOD=-0.003 [LOW [OK]] [WARN] BIASED
+
+[WARN]  Bias detected in: ['age', 'marital']
+
+[SEARCH] Computing feature importance (SHAP)...
+  duration            : 0.0780
+  month               : 0.0268
+  housing             : 0.0258
+  poutcome            : 0.0218
+  pdays               : 0.0201
+
+[GLOBAL] Global Search: generating 30 seed customers...
+  Generated 23 seeds
+
+[LOCAL] Local Search (G=found, F=not found, U=invalid, R=retry)
+  [23/23] G=309 F=15592 U=0 R=2990 cost=$1.630
+
+  Iteration 3 summary:
+  G=309 (found) | F=15845 (not found) | U=0 (invalid) | R=3036 (retries) | cost=~$1.655
+
+=================================================================
+  FINAL RESULTS
+=================================================================
+
+[METRICS] Measuring fairness...
+  marital        : SPD=-0.043 | EOD=-0.004 | DI=1.461 | AOD=-0.003 [LOW [OK]] [WARN] BIASED
+
+  Discriminatory pairs found: 309
+  Total API cost: $1.655
+
+[FILES] Saving outputs...
+  [OK] discriminatory_pairs.csv (309 pairs, 618 rows)
+  [OK] test_dataset_model_ready.csv (encoded, 618 rows)
+  [OK] how_to_use_test_dataset.py
+  [OK] fairness_report.txt
+
+
+=================================================================
+  [OK] FairAgent completed!
+  Results saved to: fairagent_results/
+=================================================================
+
+Done! Found 309 discriminatory pairs
+Cost: $1.655
+
+PS C:\Users\safrinmi\Downloads\agentic_fairness> python retrain_and_compare.py
+============================================================
+  FAIRAGENT - Retrain and Compare
+============================================================
+
+[1/6] Loading original dataset...
+  Original dataset: 45,211 rows
+  Encoded successfully
+  Marital mapping: {'divorced': np.int64(0), 'married': np.int64(1), 'single': np.int64(2)}
+  y mapping:       {'no': np.int64(0), 'yes': np.int64(1)}
+
+[2/6] Training ORIGINAL model...
+  Original accuracy: 0.8920 (89.20%)
+
+[3/6] Calculating SPD BEFORE retraining...
+  SPD (test set) BEFORE:  -0.028903
+  SPD (full set) BEFORE:  -0.043345
+  Interpretation: Single/divorced customers get more positive outcomes
+
+[4/6] Loading discriminatory samples...
+  Discriminatory samples: 618 rows
+  Columns: ['age', 'job', 'marital', 'education', 'default', 'balance', 'housing', 'loan', 'contact', 'day', 'month', 'duration', 'campaign', 'pdays', 'previous', 'poutcome', 'y']
+  Discriminatory X shape: (618, 16)
+  Discriminatory y distribution: {0: 618}
+
+[5/6] Retraining model with discriminatory samples...
+  Original training size:  36,168
+  Discriminatory samples:  618
+  New training size:       36,786
+
+  Retrained accuracy: 0.9018 (90.18%)
+  SPD (test set) AFTER:   -0.024475
+  SPD (full set) AFTER:   -0.042458
+
+============================================================
+  COMPARISON REPORT
+============================================================
+
+  ACCURACY:
+  ─────────────────────────────────────────
+  Before retraining : 0.8920 (89.20%)
+  After retraining  : 0.9018 (90.18%)
+  Change            : +0.0093 (+0.93%)
+  [OK] Accuracy maintained
+
+  SPD (marital) - TEST SET:
+  ─────────────────────────────────────────
+  Before retraining : -0.028903
+  After retraining  : -0.024475
+  Change            : +0.004428
+  [OK] Bias reduced
+
+  SPD (marital) - FULL DATASET:
+  ─────────────────────────────────────────
+  Before retraining : -0.043345
+  After retraining  : -0.042458
+  Change            : +0.000887
+  [OK] Bias reduced
+
+  DISCRIMINATORY SAMPLES ADDED:
+  ─────────────────────────────────────────
+  Training set size before : 36,168
+  Discriminatory samples   : 618
+  Training set size after  : 36,786
+  Increase                 : 1.7%
+
+  CLASSIFICATION REPORT - BEFORE:
+  ----------------------------------------
+                precision    recall  f1-score   support
+
+        No (0)       0.92      0.97      0.94      7952
+       Yes (1)       0.64      0.41      0.50      1091
+
+      accuracy                           0.90      9043
+     macro avg       0.78      0.69      0.72      9043
+  weighted avg       0.89      0.90      0.89      9043
+
+  CLASSIFICATION REPORT - AFTER:
+  ----------------------------------------
+                precision    recall  f1-score   support
+
+        No (0)       0.92      0.97      0.95      7952
+       Yes (1)       0.65      0.41      0.50      1091
+
+      accuracy                           0.90      9043
+     macro avg       0.78      0.69      0.72      9043
+  weighted avg       0.89      0.90      0.89      9043
+
+
+[6/6] Generating comparison charts...
+  [OK] fairagent_results/retraining_comparison.png
+  [OK] fairagent_results/retraining_report.txt
+
+============================================================
+  [OK] Retraining analysis complete!
+  Outputs saved to: fairagent_results/
+    - retraining_comparison.png
+    - retraining_report.txt
+============================================================

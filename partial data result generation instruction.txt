@@ -1,0 +1,188 @@
+1. configuration: in run.py file set
+api_key      = "set your api key here"
+dataset_path      = "bank-small-biased.csv"
+2. generate tests: python run.py
+3. compare results after retraining: python retrain_and_compare.py
+Note: Generating this result requires 4/5 minutes due model training and discriminatory sample searching on smaller dataset and number of iteration and seeds also have been lowered. The result of this version is used for quick tool demo.
+=======================================================================================================
+                                   Final Result
+=======================================================================================================
+PS C:\Users\safrinmi\Downloads\agentic_fairness> python .\run.py
+
+[LOAD] Loading dataset: bank-small-biased.csv
+  Loaded as UCI Bank dataset (no header)
+  Shape: (4521, 17)
+
+[OK] Protected attributes set: [ 'marital']
+
+[OK] Using protected attributes: ['marital']
+
+[MODEL] Training model (rf)...
+  [OK] Model trained successfully!
+  Accuracy: 0.7304
+  Training samples: 3,616
+  Test samples:     905
+
+[OK] LLM: gpt-4o-mini
+
+=================================================================
+  FairAgent: Bank Marketing ML Fairness Testing
+  Dataset:   4,521 customers
+  Target:    y
+  Protected: [ 'marital']
+  LLM:       gpt-4o-mini
+=================================================================
+
+─────────────────────────────────────────────────────────────────
+  ITERATION 1/1
+─────────────────────────────────────────────────────────────────
+
+[METRICS] Measuring fairness...
+  marital        : SPD=+0.629 | EOD=+0.174 | DI=0.066 | AOD=+0.165 [SEVERE [FAIL]] [WARN] BIASED
+
+[WARN]  Bias detected in: [ 'marital']
+
+[SEARCH] Computing feature importance (SHAP)...
+  marital             : 0.2352
+  duration            : 0.0375
+  age                 : 0.0224
+  balance             : 0.0160
+  month               : 0.0128
+
+[GLOBAL] Global Search: generating 5 seed customers...
+  Generated 5 seeds
+
+[LOCAL] Local Search (G=found, F=not found, U=invalid, R=retry)
+  [ 5/5] G=17 F=7 U=0 R=0 cost=$0.003
+
+  Iteration 1 summary:
+  G=21 (found) | F=9 (not found) | U=0 (invalid) | R=0 (retries) | cost=~$0.004
+
+=================================================================
+  FINAL RESULTS
+=================================================================
+
+[METRICS] Measuring fairness...
+  marital        : SPD=+0.629 | EOD=+0.174 | DI=0.066 | AOD=+0.165 [SEVERE [FAIL]] [WARN] BIASED
+
+  Discriminatory pairs found: 21
+  Total API cost: $0.004
+
+[FILES] Saving outputs...
+  [OK] discriminatory_pairs.csv (21 pairs, 42 rows)
+  [OK] test_dataset_model_ready.csv (encoded, 42 rows)
+  [OK] how_to_use_test_dataset.py
+  [OK] fairness_report.txt
+
+[CHARTS] Generating visualizations...
+  [OK] fairagent_results\visualizations\fairness_metrics.png
+  [OK] fairagent_results\visualizations\discrimination_heatmap.png
+  [OK] fairagent_results\visualizations\prediction_distribution.png
+  [OK] fairagent_results\visualizations\agent_progress.png
+
+=================================================================
+  [OK] FairAgent completed!
+  Results saved to: fairagent_results/
+=================================================================
+
+Done! Found 21 discriminatory pairs
+Cost: $0.004
+PS C:\Users\safrinmi\Downloads\agentic_fairness> python .\retrain_and_compare.py
+============================================================
+  FAIRAGENT - Retrain and Compare
+============================================================
+
+[1/6] Loading original dataset...
+  Original dataset: 4,521 rows
+  Encoded successfully
+  Marital mapping: {'divorced': np.int64(0), 'married': np.int64(1), 'single': np.int64(2)}
+  y mapping:       {'no': np.int64(0), 'yes': np.int64(1)}
+
+[2/6] Training ORIGINAL model...
+  Original accuracy: 0.7304 (73.04%)
+
+[3/6] Calculating SPD BEFORE retraining...
+  SPD (test set) BEFORE:  +0.811490
+  SPD (full set) BEFORE:  +0.629264
+  Interpretation: Married customers get more positive outcomes
+
+[4/6] Loading discriminatory samples...
+  Discriminatory samples: 42 rows
+  Columns: ['age', 'job', 'marital', 'education', 'default', 'balance', 'housing', 'loan', 'contact', 'day', 'month', 'duration', 'campaign', 'pdays', 'previous', 'poutcome', 'y']
+  Discriminatory X shape: (42, 16)
+  Discriminatory y distribution: {0: 42}
+
+[5/6] Retraining model with discriminatory samples...
+  Original training size:  3,616
+  Discriminatory samples:  42
+  New training size:       3,658
+
+  Retrained accuracy: 0.7271 (72.71%)
+  SPD (test set) AFTER:   +0.802513
+  SPD (full set) AFTER:   +0.627477
+
+============================================================
+  COMPARISON REPORT
+============================================================
+
+  ACCURACY:
+  ─────────────────────────────────────────
+  Before retraining : 0.7304 (73.04%)
+  After retraining  : 0.7271 (72.71%)
+  Change            : -0.0033 (-0.33%)
+  [OK] Accuracy maintained
+
+  SPD (marital) - TEST SET:
+  ─────────────────────────────────────────
+  Before retraining : +0.811490
+  After retraining  : +0.802513
+  Change            : -0.008977
+  [OK] Bias reduced
+
+  SPD (marital) - FULL DATASET:
+  ─────────────────────────────────────────
+  Before retraining : +0.629264
+  After retraining  : +0.627477
+  Change            : -0.001787
+  [OK] Bias reduced
+
+  DISCRIMINATORY SAMPLES ADDED:
+  ─────────────────────────────────────────
+  Training set size before : 3,616
+  Discriminatory samples   : 42
+  Training set size after  : 3,658
+  Increase                 : 1.2%
+
+  CLASSIFICATION REPORT - BEFORE:
+  ----------------------------------------
+                precision    recall  f1-score   support
+
+        No (0)       0.81      0.70      0.75       525
+       Yes (1)       0.65      0.78      0.71       380
+
+      accuracy                           0.73       905
+     macro avg       0.73      0.74      0.73       905
+  weighted avg       0.74      0.73      0.73       905
+
+  CLASSIFICATION REPORT - AFTER:
+  ----------------------------------------
+                precision    recall  f1-score   support
+
+        No (0)       0.80      0.70      0.75       525
+       Yes (1)       0.65      0.77      0.70       380
+
+      accuracy                           0.73       905
+     macro avg       0.73      0.73      0.73       905
+  weighted avg       0.74      0.73      0.73       905
+
+
+[6/6] Generating comparison charts...
+  [OK] fairagent_results/retraining_comparison.png
+  [OK] fairagent_results/retraining_report.txt
+
+============================================================
+  [OK] Retraining analysis complete!
+  Outputs saved to: fairagent_results/
+    - retraining_comparison.png
+    - retraining_report.txt
+============================================================
